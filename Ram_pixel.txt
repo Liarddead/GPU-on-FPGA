@@ -1,0 +1,25 @@
+module RAM_pixel(clk, in_data,addr_x,addr_y,out_data,write_enable);
+
+ input clk,write_enable,in_data;
+ input [9:0] addr_x,addr_y;
+ output reg  out_data;
+
+  reg  bitarray[0:640][0:640];
+   integer i,j;
+initial begin
+  
+  for (i=0; i<640; i=i+1)
+    for(j=0; j<640; j=j+1)
+      bitarray[i][j] = 1'b0;
+  
+end
+
+always @(posedge clk) begin
+        if(write_enable)
+          bitarray[addr_x][addr_y] <= in_data;
+        else
+            out_data <= bitarray[addr_x][addr_y];
+end
+
+
+endmodule

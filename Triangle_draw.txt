@@ -1,0 +1,172 @@
+module Triangle_draw(clk, reset, X0,Y0,X1,Y1,X2,Y2,hpos,vpos,out);
+
+  input clk, reset;
+  input [9:0] X0,Y0,X1,Y1,X2,Y2,hpos,vpos;
+  output  out;
+	
+  reg we,ready1,ready2,ready3;
+  reg [9:0] Dx,Dy;
+  reg [9:0] count,count2,count3;
+  reg [9:0] addr_x,addr_y;
+  reg [9:0] x_start,x_end;
+  reg [9:0] addr_x0_x1,addr_y0_y1;
+  reg [9:0] addr_x0_x2,addr_y0_y2;
+  reg [9:0] addr_x1_x2,addr_y1_y2;
+  reg [9:0] err_x,err_y,dst,buffer_x,buffer_y,buffer;
+  reg [9:0] x0,y0,x1,y1,x2,y2;
+  reg [3:0] state;
+  
+  RAM_pixel RAM_pixel(.clk(clk),.out_data(out),.in_data(1),.addr_x(addr_x),.addr_y(addr_y),.write_enable(we));
+  Line Line1(.clk(clk), .reset(0), .X0(x0),.Y0(y0),.X1(x1),.Y1(y1),.Addr_x(addr_x0_x1),.Addr_y(addr_y0_y1),.Ready(ready1));
+  Line Line2(.clk(clk), .reset(0), .X0(x0),.Y0(y0),.X1(x2),.Y1(y2),.Addr_x(addr_x0_x2),.Addr_y(addr_y0_y2),.Ready(ready2));
+  Line Line3(.clk(clk), .reset(0), .X0(x1),.Y0(y1),.X1(x2),.Y1(y2),.Addr_x(addr_x1_x2),.Addr_y(addr_y1_y2),.Ready(ready3));
+   
+
+initial begin
+  if((Y0<=Y1)&(Y0<=Y2)) begin
+    y0=Y0;
+    x0=X0;
+    if(Y1<Y2) begin
+     y1=Y1;
+     x1=X1;
+     x2=X2;
+     y2=Y2;
+    end
+    else begin
+     y1=Y2;
+     x1=X2;
+     x2=X1;
+     y2=Y1; 
+    end
+  end
+  
+  if((Y1<=Y0)&(Y1<=Y2)) begin
+    y0=Y1;
+    x0=X1;
+    if(Y0<Y2) begin
+     y1=Y0;
+     x1=X0;
+     x2=X2;
+     y2=Y2;
+    end
+    else begin
+     y1=Y2;
+     x1=X2;
+     x2=X0;
+     y2=Y0; 
+    end
+  end
+  if((Y2<=Y0)&(Y2<=Y1)) begin
+    y0=Y2;
+    x0=X2;
+    if(Y0<Y1) begin
+     y1=Y0;
+     x1=X0;
+     x2=X1;
+     y2=Y1;
+    end
+    else begin
+     y1=Y1;
+     x1=X1;
+     x2=X0;
+     y2=Y0; 
+    end
+  end
+      
+      buffer_x=0;
+      buffer_y=0;
+      buffer =0;
+      x_start=0;
+      x_end=0;
+      state=6;
+      we=1; 
+      addr_x=x0;
+      addr_y=y0;
+      we=0;
+      
+  end
+  
+   always@(posedge clk)begin
+     if(ready1&ready2)begin
+       
+     	if(state==6) begin
+       	   count<=y0+1;
+       	   state<=7;
+           end
+       
+        if(state==7) begin
+          if(count<=y1) begin
+              addr_y0_y1<=count;
+              addr_y0_y2<=count;
+              x_start <=addr_x0_x1;
+              x_end <=addr_x0_x2;
+              if(x_start>x_end) begin
+                buffer <= x_start;
+                x_start<=x_end;
+                x_end <=buffer;
+                end
+              state <=8;
+              end
+              else 
+                state <=9;
+           end
+       
+      if(state==8) begin
+       if(x_start<x_end) begin
+         we<=1; 
+   	 addr_x<=x_start;
+    	 addr_y<=count;
+         x_start<=x_start+1;
+         end
+         else begin
+           count<=count+1;
+           state <=7;
+       	   end
+         end
+       
+       if(state==9) begin
+       	   count<=y2-1;
+       	   state<=10;
+           end
+       
+        if(state==10) begin
+          if(count>y1) begin
+              addr_y0_y2<=count;
+              addr_y1_y2<=count;
+              x_start <=addr_x1_x2;
+              x_end <=addr_x0_x2;
+              if(x_start>x_end) begin
+                buffer <= x_start;
+                x_start<=x_end;
+                x_end <=buffer;
+                end
+              state <=11;
+              end
+              else 
+                state <=12;
+           end
+       
+       if(state==11) begin
+       if(x_start<x_end) begin
+         we<=1; 
+   	 addr_x<=x_start;
+    	 addr_y<=count;
+         x_start<=x_start+1;
+         end
+         else begin
+           count<=count-1;
+           state <=10;
+       	   end
+         end
+       
+       
+       
+       if(state==12) begin
+         we<=0;
+         addr_x<=hpos;
+   	 addr_y<=vpos;
+       	 end
+     
+     end
+    end
+endmodule

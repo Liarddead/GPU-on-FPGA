@@ -1,0 +1,88 @@
+import OpenGL.GL
+import OpenGL.GLUT
+import OpenGL.GLU
+import math
+import numpy as np
+from OpenGL.GL import *
+import glfw
+
+def Translation(arr,Tx,Ty,Tz):
+
+    for i in range(len(arr)):
+        arr[i][0]=arr[i][0]+Tx
+        arr[i][1] = arr[i][1] + Ty
+        arr[i][2] = arr[i][2] + Tz
+    return arr
+
+def Scalling (arr,Sx,Sy,Sz):
+
+    for i in range(len(arr)):
+        arr[i][0]=arr[i][0]*Sx
+        arr[i][1] = arr[i][1] *Sy
+        arr[i][2] = arr[i][2] *Sz
+    return arr
+def RotationX (arr,angle):
+
+    for i in range(len(arr)):
+        arr[i][0]=arr[i][0]
+        arr[i][1] = math.cos(angle)*arr[i][1]-math.sin(angle)*arr[i][2]
+        arr[i][2] = math.sin(angle)*arr[i][1]+math.cos(angle)*arr[i][2]
+    return arr
+def RotationY (arr,angle):
+
+    for i in range(len(arr)):
+        arr[i][0]=math.cos(angle)*arr[i][0]+math.sin(angle)*arr[i][2]
+        arr[i][1] = arr[i][1]
+        arr[i][2] = -(math.sin(angle)*arr[i][0])+math.cos(angle)*arr[i][2]
+    return arr
+def RotationZ (arr,angle):
+
+    for i in range(len(arr)):
+        arr[i][0]=math.cos(angle)*arr[i][0]-math.sin(angle)*arr[i][1]
+        arr[i][1] = math.sin(angle)*arr[i][0]+math.cos(angle)*arr[i][1]
+        arr[i][2] = arr[i][2]
+    return arr
+
+
+glfw.init()
+# creating a window size having 900 as width and 700 as height
+window = glfw.create_window(900, 700, "PyOpenGL Triangle", None,None)
+glfw.set_window_pos(window, 500, 300)
+glfw.make_context_current(window)
+
+vertices = [(-0.5,0.5,0.0,),
+            (0.5,0.5,0.0,),
+            (-0.5,-0.5,0.0,),
+            (0.5,-0.5,0.0,),
+            (-0.5,0.5,0.5,),
+            (0.5,0.5,0.5,),
+            (-0.5,-0.5,0.5,),
+            (0.5,-0.5,0.5,)]
+
+v = np.array(vertices, dtype = np.float32)
+
+# this will draw a colorless triangle
+glEnableClientState(GL_VERTEX_ARRAY)
+glVertexPointer(3, GL_FLOAT,0,v)
+
+# this will set a color for your background
+glClearColor(0, 0, 0, 0)
+i=0
+while not glfw.window_should_close(window):
+    v = RotationY(v, i)
+    glfw.poll_events()
+    glClear(GL_COLOR_BUFFER_BIT)
+    glDrawArrays( GL_LINE_LOOP,0,4)
+    """
+    GL_POINTS
+    GL_LINES
+    GL_LINE_STRIP
+    GL_LINE_LOOP
+    GL_TRIANGLES
+    GL_TRIANGLE_STRIP
+    """
+    glfw.swap_buffers(window)
+    i=i+0.0000001
+    if(i==360):
+        i=0
+glfw.terminate()

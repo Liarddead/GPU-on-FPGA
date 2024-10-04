@@ -1,0 +1,93 @@
+module Line(clk, reset, X0,Y0,X1,Y1,Addr_x,Addr_y,Ready);
+
+  input clk, reset;
+  input [9:0] X0,Y0,X1,Y1,Addr_y;
+  output[9:0] Addr_x;
+  output  Ready;
+  reg ready;
+  reg [9:0] Dx,Dy,dist_x,dist_y,Dist;
+  reg [9:0] count,count2,count3;
+  reg [9:0] X,Y;
+  reg [9:0] addr_x,addr_y;
+  reg [9:0] err_x,err_y,dst,buffer_x,buffer_y;
+  reg [9:0] x0,y0,x1,y1;
+  reg [9:0] bitarray[0:640];
+  integer i; 
+   
+
+initial begin
+  for (i=0; i<640; i=i+1) begin
+    bitarray[i]=0;
+  end
+    
+  x0=X0;
+  y0=Y0;
+  x1=X1;
+  y1=Y1;
+  if(X0>X1) 
+  	Dx =X0-X1;
+  else
+  	Dx =X1-X0; 
+  if(Y0>Y1)
+  	Dy =Y0-Y1;
+  else
+  	Dy =Y1-Y0;
+  
+  dist_x =Dx;
+  dist_y =Dy;
+  Dist =dist_x;
+  if(dist_y>=dist_x) 
+    Dist=dist_y;
+  err_x=0;
+  err_y=0;
+  dst=(Dist);
+  count=0;
+  count2=0;
+  count3=0;
+  ready=0;
+  addr_y=0;
+  addr_x=0;
+   
+end
+  
+  always@(posedge clk)begin
+    if(count<=dst) begin
+      bitarray[y0]<=x0;
+      buffer_x<=err_x+dist_x;
+      buffer_y<=err_y+dist_y;
+     
+      if(buffer_x >=Dist) begin
+        err_x<=buffer_x-Dist;
+        count2 <=count2+1;
+        if (X0 < X1)
+          x0<=x0+1;
+        else
+          x0<=x0-1;
+      end
+      else
+        err_x<=buffer_x;
+      
+      if(buffer_y >=Dist) begin
+        err_y<=buffer_y-Dist;
+        count3<=count3+1;
+        if (Y0 < Y1)
+          y0<=y0+1;
+        else
+          y0<=y0-1;   
+      end
+      else
+        err_y<=buffer_y;
+      count <=count+1;
+ 
+    end
+    else begin 
+    addr_y<=Addr_y;
+    addr_x<=bitarray[addr_y];
+    ready<=1;
+    end
+  end
+  assign Addr_x =addr_x;
+  assign Ready=ready;
+  
+  
+endmodule
